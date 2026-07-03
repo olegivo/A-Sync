@@ -203,8 +203,8 @@ extension Importer: ICCameraDeviceDelegate {
 
     // MARK: ICCameraDeviceDelegate — методы протокола без действий в рамках MVP.
 
-    nonisolated func cameraDevice(_ camera: ICCameraDevice, didAddItems items: [ICCameraItem]) {}
-    nonisolated func cameraDevice(_ camera: ICCameraDevice, didRemoveItems items: [ICCameraItem]) {}
+    nonisolated func cameraDevice(_ camera: ICCameraDevice, didAdd items: [ICCameraItem]) {}
+    nonisolated func cameraDevice(_ camera: ICCameraDevice, didRemove items: [ICCameraItem]) {}
     nonisolated func cameraDevice(_ camera: ICCameraDevice, didRenameItems items: [ICCameraItem]) {}
     nonisolated func cameraDevice(_ camera: ICCameraDevice, didReceiveThumbnail thumbnail: CGImage?, for item: ICCameraItem, error: Error?) {}
     nonisolated func cameraDevice(_ camera: ICCameraDevice, didReceiveMetadata metadata: [AnyHashable: Any]?, for item: ICCameraItem, error: Error?) {}
