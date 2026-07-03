@@ -20,7 +20,7 @@
 A-Sync/                         # Gradle KMP-проект
 ├─ settings.gradle.kts
 ├─ build.gradle.kts
-├─ gradle/wrapper/…             # Gradle wrapper (8.10.2)
+├─ gradle/wrapper/…             # Gradle wrapper (8.14.4)
 ├─ shared/                      # KMP-модуль общей логики (Kotlin)
 │  ├─ build.gradle.kts          # таргеты: jvm + macos/ios (XCFramework "Shared")
 │  └─ src/
