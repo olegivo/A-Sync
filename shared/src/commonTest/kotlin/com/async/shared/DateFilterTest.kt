@@ -57,4 +57,15 @@ class DateFilterTest {
     fun includesFileWithUnknownDateWhenFilterEnabled() {
         assertTrue(filter.shouldInclude(null, now, 7))
     }
+
+    @Test
+    fun isWithinWindowDisabledIncludesAll() {
+        assertTrue(filter.isWithinWindow(now - 100 * day, now, 0))
+    }
+
+    @Test
+    fun isWithinWindowRespectsCutoff() {
+        assertTrue(filter.isWithinWindow(now - 1 * day, now, 7))
+        assertFalse(filter.isWithinWindow(now - 10 * day, now, 7))
+    }
 }

@@ -28,6 +28,21 @@ class DateFilter {
     }
 
     /**
+     * Проходит ли файл с известной датой создания.
+     *
+     * Не-nullable перегрузка — удобна для вызова из Swift без боксинга (`KotlinLong`).
+     *
+     * @param creationEpochMillis Дата создания файла.
+     * @param nowEpochMillis Текущий момент.
+     * @param maxAgeDays Порог в днях; `<= 0` — фильтр выключен (берём всё).
+     * @return `true`, если файл проходит фильтр.
+     */
+    fun isWithinWindow(creationEpochMillis: Long, nowEpochMillis: Long, maxAgeDays: Int): Boolean {
+        val cutoff = cutoffEpochMillis(nowEpochMillis, maxAgeDays) ?: return true
+        return creationEpochMillis >= cutoff
+    }
+
+    /**
      * Нужно ли включать файл в импорт.
      *
      * @param creationEpochMillis Дата создания файла; `null` — дата неизвестна.
@@ -40,8 +55,7 @@ class DateFilter {
      *  * если дата создания неизвестна — файл включается (безопасное поведение: не терять данные).
      */
     fun shouldInclude(creationEpochMillis: Long?, nowEpochMillis: Long, maxAgeDays: Int): Boolean {
-        val cutoff = cutoffEpochMillis(nowEpochMillis, maxAgeDays) ?: return true
         if (creationEpochMillis == null) return true
-        return creationEpochMillis >= cutoff
+        return isWithinWindow(creationEpochMillis, nowEpochMillis, maxAgeDays)
     }
 }
