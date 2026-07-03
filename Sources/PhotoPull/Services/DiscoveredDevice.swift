@@ -15,20 +15,18 @@ struct DiscoveredDevice: Identifiable, Equatable {
         device.name ?? "Неизвестное устройство"
     }
 
-    /// Транспорт подключения — для подсказки пользователю (кабель/сеть).
+    /// Транспорт подключения — для подсказки пользователю (кабель/накопитель).
+    ///
+    /// `transportType` в текущем SDK — строковое значение (`ICDeviceTransport`), поэтому
+    /// сравниваем по строковому представлению: это устойчиво к тому, импортируется ли тип
+    /// как `String` или как типизированная строковая обёртка, и не зависит от набора
+    /// констант (напр., `ICTransportTypeTCPIP` в текущем SDK отсутствует).
     var transportDescription: String {
-        switch device.transportType {
-        case ICTransportTypeUSB:
-            return "USB (кабель)"
-        case ICTransportTypeTCPIP:
-            return "Wi-Fi / сеть"
-        case ICTransportTypeMassStorage:
-            return "Накопитель"
-        case ICTransportTypeBluetooth:
-            return "Bluetooth"
-        default:
-            return "Подключено"
-        }
+        let transport = device.transportType.map { "\($0)" } ?? ""
+        if transport.contains("USB") { return "USB (кабель)" }
+        if transport.contains("MassStorage") { return "Накопитель" }
+        if transport.contains("Bluetooth") { return "Bluetooth" }
+        return "Подключено"
     }
 
     /// Заблокированное/недоверенное Apple-устройство: импорт невозможен без разблокировки.

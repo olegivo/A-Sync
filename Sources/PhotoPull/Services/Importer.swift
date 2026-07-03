@@ -32,7 +32,7 @@ final class Importer: NSObject, ObservableObject {
     private var device: ICCameraDevice?
     private var destinationURL: URL?
     private var isAccessingResource = false
-    private var transferMode: TransferMode = .copy
+    private var transferMode: TransferMode = TransferMode.copyMode
     private var filterDaysBack: Int = 0
 
     private var queue: [ICCameraFile] = []
@@ -141,12 +141,12 @@ final class Importer: NSObject, ObservableObject {
         currentFileProgress = 0
 
         var options: [ICDownloadOption: Any] = [
-            ICDownloadsDirectoryURL: destinationURL as NSURL,
-            ICSaveAsFilename: uniqueName,
-            ICOverwrite: NSNumber(value: false)
+            .downloadsDirectoryURL: destinationURL as NSURL,
+            .saveAsFilename: uniqueName,
+            .overwrite: NSNumber(value: false)
         ]
         if transferMode.deletesSourceAfterDownload {
-            options[ICDeleteAfterSuccessfulDownload] = NSNumber(value: true)
+            options[.deleteAfterSuccessfulDownload] = NSNumber(value: true)
         }
 
         device.requestDownloadFile(
@@ -170,7 +170,7 @@ final class Importer: NSObject, ObservableObject {
     }
 }
 
-// MARK: - ICDeviceDelegate / ICCameraDeviceDelegate
+// MARK: - ICDeviceDelegate
 
 extension Importer: ICCameraDeviceDelegate {
 
@@ -201,22 +201,27 @@ extension Importer: ICCameraDeviceDelegate {
         }
     }
 
-    // Требуемые протоколом методы без действий в рамках MVP.
-    nonisolated func cameraDevice(_ camera: ICCameraDevice, didAdd items: [ICCameraItem]) {}
-    nonisolated func cameraDevice(_ camera: ICCameraDevice, didRemove items: [ICCameraItem]) {}
-    nonisolated func cameraDeviceDidChangeCapability(_ camera: ICCameraDevice) {}
+    // MARK: ICCameraDeviceDelegate — методы протокола без действий в рамках MVP.
+
+    nonisolated func cameraDevice(_ camera: ICCameraDevice, didAddItems items: [ICCameraItem]) {}
+    nonisolated func cameraDevice(_ camera: ICCameraDevice, didRemoveItems items: [ICCameraItem]) {}
+    nonisolated func cameraDevice(_ camera: ICCameraDevice, didRenameItems items: [ICCameraItem]) {}
     nonisolated func cameraDevice(_ camera: ICCameraDevice, didReceiveThumbnail thumbnail: CGImage?, for item: ICCameraItem, error: Error?) {}
     nonisolated func cameraDevice(_ camera: ICCameraDevice, didReceiveMetadata metadata: [AnyHashable: Any]?, for item: ICCameraItem, error: Error?) {}
+    nonisolated func cameraDeviceDidChangeCapability(_ camera: ICCameraDevice) {}
     nonisolated func cameraDevice(_ camera: ICCameraDevice, didReceivePTPEvent eventData: Data) {}
+    nonisolated func cameraDevice(_ camera: ICCameraDevice, didCompleteDeleteFilesWithError error: Error?) {}
     nonisolated func cameraDeviceDidEnableAccessRestriction(_ device: ICDevice) {}
     nonisolated func cameraDeviceDidRemoveAccessRestriction(_ device: ICDevice) {}
+    nonisolated func cameraDevice(_ cameraDevice: ICCameraDevice, shouldGetThumbnailOf item: ICCameraItem) -> Bool { false }
+    nonisolated func cameraDevice(_ cameraDevice: ICCameraDevice, shouldGetMetadataOf item: ICCameraItem) -> Bool { false }
 }
 
 // MARK: - ICCameraDeviceDownloadDelegate
 
 extension Importer: ICCameraDeviceDownloadDelegate {
 
-    @objc func didDownloadFile(_ file: ICCameraFile, error: Error?, options: [AnyHashable: Any]?, contextInfo: UnsafeMutableRawPointer?) {
+    @objc func didDownloadFile(_ file: ICCameraFile, error: Error?, options: [String: Any], contextInfo: UnsafeMutableRawPointer?) {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             if error == nil {
