@@ -1,6 +1,6 @@
 import Foundation
 import SwiftUI
-import PhotoPullCore
+import Shared
 
 /// Наблюдаемая модель настроек для SwiftUI.
 ///

@@ -1,5 +1,4 @@
 import SwiftUI
-import PhotoPullCore
 
 /// Ручной запуск импорта, индикатор прогресса и итоговая сводка.
 struct ImportSection: View {
@@ -57,8 +56,8 @@ struct ImportSection: View {
                 }
             }
 
-        case let .finished(result):
-            Label(result.summary, systemImage: "checkmark.circle.fill")
+        case let .finished(summary):
+            Label(summary, systemImage: "checkmark.circle.fill")
                 .font(.callout)
                 .foregroundStyle(.green)
 

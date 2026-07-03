@@ -1,6 +1,6 @@
 import SwiftUI
 import AppKit
-import PhotoPullCore
+import Shared
 
 /// Раздел настроек MVP: путь назначения и режим (копировать/переместить).
 struct SettingsSection: View {
@@ -27,7 +27,7 @@ struct SettingsSection: View {
                 Text("Режим:")
                     .frame(width: 110, alignment: .leading)
                 Picker("", selection: $settings.transferMode) {
-                    ForEach(TransferMode.allCases, id: \.self) { mode in
+                    ForEach(TransferMode.uiCases, id: \.self) { mode in
                         Text(mode.title).tag(mode)
                     }
                 }
@@ -37,7 +37,7 @@ struct SettingsSection: View {
                 Spacer()
             }
 
-            if settings.transferMode == .move {
+            if settings.transferMode.deletesSourceAfterDownload {
                 Label("Файлы будут удалены с iPhone после успешной загрузки.",
                       systemImage: "exclamationmark.triangle")
                     .font(.caption)

@@ -1,31 +1,30 @@
 // swift-tools-version: 5.9
 import PackageDescription
 
-// PhotoPull — macOS-приложение для импорта фото/видео с iPhone через ImageCaptureCore.
+// macOS-приложение PhotoPull.
 //
-// Структура намеренно разделена на два таргета:
-//   * PhotoPullCore — чистая логика без зависимостей от Apple UI/ImageCaptureCore.
-//     Компилируется и тестируется на любой платформе, где есть Swift (в т.ч. Linux CI).
-//   * PhotoPull — исполняемый macOS-таргет (SwiftUI + ImageCaptureCore). Собирается
-//     только на macOS 13+.
+// Общая логика вынесена в KMP-модуль `shared` (Kotlin) и поставляется сюда как
+// бинарный XCFramework `Shared.xcframework`. Перед сборкой приложения его нужно собрать:
 //
-// Для сборки приложения открой Package.swift в Xcode на macOS и запусти схему PhotoPull.
+//     ./gradlew :shared:assembleSharedReleaseXCFramework
+//
+// XCFramework появится по пути shared/build/XCFrameworks/release/Shared.xcframework
+// и подключится к таргету PhotoPull через .binaryTarget ниже.
+//
+// Собирается только на macOS 13+ (нужны SwiftUI и ImageCaptureCore).
 let package = Package(
     name: "PhotoPull",
     platforms: [
         .macOS(.v13)
     ],
     targets: [
-        .target(
-            name: "PhotoPullCore"
+        .binaryTarget(
+            name: "Shared",
+            path: "shared/build/XCFrameworks/release/Shared.xcframework"
         ),
         .executableTarget(
             name: "PhotoPull",
-            dependencies: ["PhotoPullCore"]
-        ),
-        .testTarget(
-            name: "PhotoPullCoreTests",
-            dependencies: ["PhotoPullCore"]
+            dependencies: ["Shared"]
         )
     ]
 )

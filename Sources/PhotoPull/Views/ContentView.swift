@@ -1,5 +1,5 @@
 import SwiftUI
-import PhotoPullCore
+import Shared
 
 struct ContentView: View {
 

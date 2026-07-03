@@ -1,6 +1,6 @@
 import Foundation
 import ImageCaptureCore
-import PhotoPullCore
+import Shared
 
 /// Контроллер импорта медиафайлов с камеры/iPhone через ImageCaptureCore.
 ///
@@ -19,7 +19,7 @@ final class Importer: NSObject, ObservableObject {
         case idle
         case openingSession
         case downloading(completed: Int, total: Int)
-        case finished(ImportResult)
+        case finished(summary: String)
         case failed(String)
     }
 
@@ -36,11 +36,10 @@ final class Importer: NSObject, ObservableObject {
 
     private var queue: [ICCameraFile] = []
     private var totalCount = 0
-    private var result = ImportResult()
+    private var succeeded = 0
+    private var failed = 0
     private var usedFilenames: Set<String> = []
     private var hasStartedDownloads = false
-
-    private let filenameResolver = FilenameResolver()
 
     var isRunning: Bool {
         switch state {
@@ -48,6 +47,8 @@ final class Importer: NSObject, ObservableObject {
         case .openingSession, .downloading: return true
         }
     }
+
+    private var processedCount: Int { succeeded + failed }
 
     // MARK: - Public API
 
@@ -62,7 +63,8 @@ final class Importer: NSObject, ObservableObject {
         self.device = device
         self.destinationURL = destination
         self.transferMode = mode
-        self.result = ImportResult()
+        self.succeeded = 0
+        self.failed = 0
         self.usedFilenames = []
         self.queue = []
         self.hasStartedDownloads = false
@@ -100,7 +102,7 @@ final class Importer: NSObject, ObservableObject {
 
         guard !queue.isEmpty else {
             finish(closingSession: true)
-            state = .finished(result)
+            state = .finished(summary: SharedLogic.summary(succeeded: 0, failed: 0))
             return
         }
 
@@ -113,13 +115,13 @@ final class Importer: NSObject, ObservableObject {
 
         guard !queue.isEmpty else {
             finish(closingSession: true)
-            state = .finished(result)
+            state = .finished(summary: SharedLogic.summary(succeeded: succeeded, failed: failed))
             return
         }
 
         let file = queue.removeFirst()
-        let originalName = file.name ?? "file-\(result.total + 1)"
-        let uniqueName = filenameResolver.uniqueFilename(for: originalName, existing: usedFilenames)
+        let originalName = file.name ?? "file-\(processedCount + 1)"
+        let uniqueName = SharedLogic.uniqueFilename(originalName, existing: usedFilenames)
         usedFilenames.insert(uniqueName)
 
         currentFileName = uniqueName
@@ -205,12 +207,12 @@ extension Importer: ICCameraDeviceDownloadDelegate {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             if error == nil {
-                self.result.succeeded += 1
+                self.succeeded += 1
             } else {
-                self.result.failed += 1
+                self.failed += 1
             }
             self.currentFileProgress = 0
-            self.state = .downloading(completed: self.result.total, total: self.totalCount)
+            self.state = .downloading(completed: self.processedCount, total: self.totalCount)
             self.downloadNext()
         }
     }

@@ -1,5 +1,5 @@
 import Foundation
-import PhotoPullCore
+import Shared
 
 /// Персистентное хранилище настроек приложения.
 ///
@@ -20,11 +20,10 @@ final class SettingsStore {
 
     var transferMode: TransferMode {
         get {
-            defaults.string(forKey: Key.transferMode)
-                .flatMap(TransferMode.init(rawValue:)) ?? .copy
+            SharedLogic.transferMode(fromId: defaults.string(forKey: Key.transferMode))
         }
         set {
-            defaults.set(newValue.rawValue, forKey: Key.transferMode)
+            defaults.set(newValue.id, forKey: Key.transferMode)
         }
     }
 
