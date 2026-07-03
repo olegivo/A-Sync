@@ -20,7 +20,7 @@
 A-Sync/                         # Gradle KMP-проект
 ├─ settings.gradle.kts
 ├─ build.gradle.kts
-├─ gradle/wrapper/…             # Gradle wrapper (8.14.4)
+├─ gradle/wrapper/…             # Gradle wrapper (9.1.0 — совместим с AGP 9)
 ├─ shared/                      # KMP-модуль общей логики (Kotlin)
 │  ├─ build.gradle.kts          # таргеты: jvm + macos/ios (XCFramework "Shared")
 │  └─ src/
@@ -88,6 +88,26 @@ XCFramework появляется по пути
 
 Для распространения как полноценного `.app` создайте в Xcode App-таргет и подключите
 `AppSupport/Info.plist` и `AppSupport/PhotoPull.entitlements`.
+
+## Совместимость версий (готовность к Android / AGP 9)
+
+Тулчейн приведён к требованиям **Android Gradle Plugin 9**, чтобы будущий Android-таргет
+подключался без миграции фундамента:
+
+| Компонент | Версия | Требование AGP 9 | Статус |
+|---|---|---|---|
+| Gradle | 9.1.0 | ≥ 9.1.0 | ✅ |
+| JDK | 17+ (в CI — 21) | ≥ 17 | ✅ |
+| Kotlin | 2.4.0 | встроенная поддержка Kotlin в AGP 9 | ✅ |
+| AGP | — (пока нет Android-таргета) | 9.0.1+ | добавляется вместе с Android-модулем |
+
+Когда добавится Android-клиент (например, CMP или отдельное Android-приложение), нужно будет:
+
+1. подключить `com.android.library` / `com.android.application` версии **9.x** (AGP 9 имеет
+   встроенную поддержку Kotlin — отдельный `kotlin-android` не нужен);
+2. добавить `androidTarget()` в `shared/build.gradle.kts` и блок `android { … }`;
+3. установить Android SDK (Build Tools 36.0.0+, `compileSdk`/`targetSdk` ≥ 36);
+4. android-unit-тесты общей логики также поедут на дешёвый Linux-раннер (×1).
 
 ## CI
 
