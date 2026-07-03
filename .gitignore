@@ -1,6 +1,15 @@
 .DS_Store
+
+# Swift / Xcode
 .build/
 .swiftpm/
 DerivedData/
 *.xcodeproj/xcuserdata/
 xcuserdata/
+
+# Gradle / Kotlin
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+local.properties
+.kotlin/
