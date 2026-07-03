@@ -33,6 +33,7 @@ final class Importer: NSObject, ObservableObject {
     private var destinationURL: URL?
     private var isAccessingResource = false
     private var transferMode: TransferMode = .copy
+    private var filterDaysBack: Int = 0
 
     private var queue: [ICCameraFile] = []
     private var totalCount = 0
@@ -52,7 +53,7 @@ final class Importer: NSObject, ObservableObject {
 
     // MARK: - Public API
 
-    func startImport(device: ICCameraDevice, destination: URL, mode: TransferMode) {
+    func startImport(device: ICCameraDevice, destination: URL, mode: TransferMode, filterDaysBack: Int) {
         guard !isRunning else { return }
 
         if device.isAccessRestrictedAppleDevice {
@@ -63,6 +64,7 @@ final class Importer: NSObject, ObservableObject {
         self.device = device
         self.destinationURL = destination
         self.transferMode = mode
+        self.filterDaysBack = filterDaysBack
         self.succeeded = 0
         self.failed = 0
         self.usedFilenames = []
@@ -96,7 +98,18 @@ final class Importer: NSObject, ObservableObject {
         guard !hasStartedDownloads, let device else { return }
         hasStartedDownloads = true
 
-        let media = (device.mediaFiles ?? []).compactMap { $0 as? ICCameraFile }
+        let now = Date()
+        let media = (device.mediaFiles ?? [])
+            .compactMap { $0 as? ICCameraFile }
+            .filter { file in
+                // Дата съёмки (EXIF) с фолбэком на файловую дату создания.
+                let creationDate = file.creationDate ?? file.fileCreationDate
+                return SharedLogic.shouldInclude(
+                    creationDate: creationDate,
+                    now: now,
+                    maxAgeDays: filterDaysBack
+                )
+            }
         queue = media
         totalCount = media.count
 

@@ -68,6 +68,11 @@ struct ContentView: View {
     private func startImport() {
         guard let device = selectedDevice?.device,
               let destination = settings.destinationURL else { return }
-        importer.startImport(device: device, destination: destination, mode: settings.transferMode)
+        importer.startImport(
+            device: device,
+            destination: destination,
+            mode: settings.transferMode,
+            filterDaysBack: settings.filterDaysBack
+        )
     }
 }

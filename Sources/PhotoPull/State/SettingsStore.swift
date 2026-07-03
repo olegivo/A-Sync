@@ -12,6 +12,7 @@ final class SettingsStore {
     private enum Key {
         static let destinationBookmark = "destinationBookmark"
         static let transferMode = "transferMode"
+        static let filterDaysBack = "filterDaysBack"
     }
 
     init(defaults: UserDefaults = .standard) {
@@ -25,6 +26,12 @@ final class SettingsStore {
         set {
             defaults.set(newValue.id, forKey: Key.transferMode)
         }
+    }
+
+    /// Порог фильтра «только новые файлы» в днях. `0` — фильтр выключен.
+    var filterDaysBack: Int {
+        get { max(0, defaults.integer(forKey: Key.filterDaysBack)) }
+        set { defaults.set(max(0, newValue), forKey: Key.filterDaysBack) }
     }
 
     /// Восстанавливает URL папки назначения из сохранённой закладки.

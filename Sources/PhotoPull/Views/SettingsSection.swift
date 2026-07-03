@@ -43,6 +43,36 @@ struct SettingsSection: View {
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
+
+            dateFilterRow
+        }
+    }
+
+    private var dateFilterRow: some View {
+        HStack(spacing: 12) {
+            Text("Только новые:")
+                .frame(width: 110, alignment: .leading)
+
+            Toggle("", isOn: Binding(
+                get: { settings.isDateFilterEnabled },
+                set: { settings.isDateFilterEnabled = $0 }
+            ))
+            .labelsHidden()
+            .toggleStyle(.switch)
+
+            if settings.isDateFilterEnabled {
+                Stepper(
+                    value: $settings.filterDaysBack,
+                    in: 1...3650
+                ) {
+                    Text("за последние \(settings.filterDaysBack) дн.")
+                }
+                .fixedSize()
+            } else {
+                Text("копировать все файлы")
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
         }
     }
 
