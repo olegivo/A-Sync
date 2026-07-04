@@ -32,7 +32,9 @@ A-Sync/                         # Gradle KMP-проект
 │     │  ├─ DateFilter.kt        # фильтр «только новые файлы» по дате
 │     │  └─ ImportResult.kt      # сводка импорта
 │     └─ commonTest/kotlin/…     # тесты логики (гоняются на JVM/Linux, ×1)
-├─ Package.swift                # macOS-приложение (SwiftPM), зависит от Shared.xcframework
+├─ project.yml                 # спецификация Xcode App-таргета (XcodeGen)
+├─ Package.swift                # быстрая проверка компиляции (SwiftPM), зависит от Shared.xcframework
+├─ scripts/build-dmg.sh         # сборка .app + DMG
 ├─ Sources/PhotoPull/           # Swift + SwiftUI + ImageCaptureCore
 │  ├─ Interop/SharedInterop.swift  # единственная точка Kotlin↔Swift-интеропа
 │  ├─ State/                    # AppSettings, SettingsStore
@@ -81,19 +83,33 @@ macOS-раннер используется только для сборки App
 
 ### 2. Сборка macOS-приложения (только macOS 13+, Xcode 15+)
 
-Сначала собрать XCFramework из KMP-модуля, затем приложение:
+Общий шаг для любого способа — собрать XCFramework из KMP-модуля:
 
 ```bash
 ./gradlew :shared:assembleSharedReleaseXCFramework
-swift build          # или открыть Package.swift в Xcode и запустить схему PhotoPull
 ```
 
-XCFramework появляется по пути
-`shared/build/XCFrameworks/release/Shared.xcframework` и подключается к таргету `PhotoPull`
-через `.binaryTarget` в `Package.swift`.
+XCFramework появляется по пути `shared/build/XCFrameworks/release/Shared.xcframework`.
 
-Для распространения как полноценного `.app` создайте в Xcode App-таргет и подключите
-`AppSupport/Info.plist` и `AppSupport/PhotoPull.entitlements`.
+**Полноценный App-таргет (рекомендуется).** Xcode-проект генерируется из `project.yml`
+через [XcodeGen](https://github.com/yonaskolb/XcodeGen) — сам `.xcodeproj` в репозиторий не
+коммитится, а детерминированно создаётся командой:
+
+```bash
+brew install xcodegen        # однократно
+xcodegen generate            # создаст PhotoPull.xcodeproj
+open PhotoPull.xcodeproj      # собрать/запустить схему PhotoPull (⌘R)
+```
+
+Этот таргет — настоящее приложение с `AppSupport/Info.plist`, entitlements (песочница, USB,
+доступ к выбранной папке) и линковкой `Shared.xcframework`.
+
+**Быстрая проверка компиляции (без бандла).** Есть также `Package.swift`, который собирает
+исполняемый бинарник через SwiftPM (используется в CI для дешёвой проверки компиляции):
+
+```bash
+swift build
+```
 
 ### 3. Сборка DMG для установки (macOS)
 
@@ -101,9 +117,10 @@ XCFramework появляется по пути
 ./scripts/build-dmg.sh
 ```
 
-Скрипт собирает `Shared.xcframework`, компилирует релизный бинарник, упаковывает его в
-`PhotoPull.app` (Info.plist из `AppSupport/`, ad-hoc подпись) и создаёт
+Скрипт собирает `Shared.xcframework`, генерирует Xcode-проект (`xcodegen`), собирает
+App-таргет через `xcodebuild` (Release), подписывает ad-hoc с entitlements и создаёт
 `dist/PhotoPull-<version>.dmg` со ссылкой на `/Applications` для drag-and-drop установки.
+Требуется `brew install xcodegen`.
 
 DMG также собирается в CI: workflow **Release DMG** (`.github/workflows/release.yml`)
 запускается вручную (`workflow_dispatch`) или по тегу `vX.Y.Z` и публикует DMG как artifact.
