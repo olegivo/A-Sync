@@ -1,0 +1,43 @@
+name: Release DMG
+
+# Сборка устанавливаемого DMG. Запускается вручную или по тегу vX.Y.Z, чтобы не
+# расходовать дорогие (×10) macOS-минуты на каждый push.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+  # ВРЕМЕННО: одноразовая проверка сборки DMG на PR. Будет удалено после верификации.
+  pull_request:
+
+jobs:
+  build-dmg:
+    name: Build installable DMG (macOS)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Cache Gradle & Konan
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.konan
+          key: gradle-macos-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-macos-
+
+      - name: Build DMG
+        run: ./scripts/build-dmg.sh
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhotoPull-dmg
+          path: dist/*.dmg
+          if-no-files-found: error
