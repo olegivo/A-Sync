@@ -2,8 +2,12 @@ name: Deploy user guide to GitHub Pages
 
 # Публикует инструкцию пользователя (docs/USER_GUIDE.md + скриншоты) как сайт GitHub Pages.
 #
-# Требования:
+# Требования (однократная ручная настройка владельцем репозитория):
 #   * В Settings → Pages выбрать Source = "GitHub Actions".
+#     Это обязательный шаг: дефолтный GITHUB_TOKEN не имеет прав программно включать/
+#     переключать источник Pages, поэтому автоматическое включение (enablement) здесь не
+#     используется. Пока источник не переключён на "GitHub Actions", сайт отдаётся из
+#     ветки/каталога (legacy) и результат этого workflow не публикуется.
 #   * Для приватного репозитория Pages доступен только на платных планах
 #     (GitHub Pro/Team/Enterprise). На бесплатном плане репозиторий должен быть публичным.
 on:
@@ -32,12 +36,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # enablement: true автоматически включает Pages (Source = GitHub Actions),
-      # чтобы не выбирать источник вручную в Settings → Pages.
+      # Источник Pages должен быть заранее выбран как "GitHub Actions" в Settings → Pages
+      # (см. комментарий вверху файла). Здесь только считываем конфигурацию сайта —
+      # enablement не используем, т.к. GITHUB_TOKEN не имеет прав включать Pages.
       - name: Configure Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - uses: actions/setup-python@v5
         with:
