@@ -38,3 +38,13 @@ targets:
         # (нет аккаунта, публикация не планируется).
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "-"
+
+schemes:
+  PhotoPull:
+    build:
+      targets:
+        PhotoPull: all
+    run:
+      config: Release
+    archive:
+      config: Release

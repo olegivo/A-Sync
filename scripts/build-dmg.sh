@@ -35,7 +35,7 @@ echo "==> 2/5 Генерирую Xcode-проект (XcodeGen)"
 echo "==> 3/5 Собираю App-таргет (Release, ad-hoc signing)"
 xcodebuild \
     -project "${ROOT_DIR}/${APP_NAME}.xcodeproj" \
-    -target "${APP_NAME}" \
+    -scheme "${APP_NAME}" \
     -configuration Release \
     -derivedDataPath "${DERIVED}" \
     CODE_SIGN_IDENTITY="-" \
