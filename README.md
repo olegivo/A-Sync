@@ -95,6 +95,31 @@ XCFramework появляется по пути
 Для распространения как полноценного `.app` создайте в Xcode App-таргет и подключите
 `AppSupport/Info.plist` и `AppSupport/PhotoPull.entitlements`.
 
+### 3. Сборка DMG для установки (macOS)
+
+```bash
+./scripts/build-dmg.sh
+```
+
+Скрипт собирает `Shared.xcframework`, компилирует релизный бинарник, упаковывает его в
+`PhotoPull.app` (Info.plist из `AppSupport/`, ad-hoc подпись) и создаёт
+`dist/PhotoPull-<version>.dmg` со ссылкой на `/Applications` для drag-and-drop установки.
+
+DMG также собирается в CI: workflow **Release DMG** (`.github/workflows/release.yml`)
+запускается вручную (`workflow_dispatch`) или по тегу `vX.Y.Z` и публикует DMG как artifact.
+
+#### Установка из DMG (обход Gatekeeper)
+
+DMG **не подписан** Developer ID (нет Apple Developer аккаунта, публикация не планируется),
+поэтому при первом запуске macOS покажет предупреждение «неизвестный разработчик». Варианты:
+
+- ПКМ по приложению → **«Открыть»** → подтвердить; либо
+- снять карантинный атрибут:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/PhotoPull.app
+```
+
 ## Совместимость версий (готовность к Android / AGP 9)
 
 Тулчейн приведён к требованиям **Android Gradle Plugin 9**, чтобы будущий Android-таргет
