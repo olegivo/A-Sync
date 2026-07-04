@@ -26,6 +26,11 @@ struct DiscoveredDevice: Identifiable, Equatable {
         if transport.contains("USB") { return "USB (кабель)" }
         if transport.contains("MassStorage") { return "Накопитель" }
         if transport.contains("Bluetooth") { return "Bluetooth" }
+        // Сетевые устройства (Bonjour/PTP-IP) в текущем SDK не имеют отдельной константы,
+        // распознаём по строковому представлению транспорта.
+        if transport.contains("TCP") || transport.localizedCaseInsensitiveContains("bonjour") {
+            return "Сеть / Wi-Fi"
+        }
         return "Подключено"
     }
 
