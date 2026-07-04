@@ -13,7 +13,8 @@ on:
 jobs:
   build-dmg:
     name: Build installable DMG (macOS)
-    runs-on: macos-14
+    # macos-15 несёт Xcode 16+, совместимый с форматом проекта, который генерирует XcodeGen.
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
