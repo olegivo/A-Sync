@@ -186,12 +186,17 @@ xattr -dr com.apple.quarantine /Applications/PhotoPull.app
 
 **Как включить:**
 
-Workflow сам включает Pages (`actions/configure-pages` с `enablement: true`) при первом
-запуске на ветке `main`, поэтому достаточно:
+Дефолтный `GITHUB_TOKEN` не имеет прав программно включать Pages, поэтому источник
+выбирается вручную один раз:
 
-1. смёрджить изменения в `main` (workflow запустится автоматически), либо запустить
+1. **Settings → Pages → Build and deployment → Source = «GitHub Actions»** (однократно).
+   Пока источник не переключён, сайт отдаётся из ветки/каталога в режиме legacy, а
+   результат workflow не публикуется.
+2. смёрджить изменения в `main` (workflow запустится автоматически), либо запустить
    **Deploy user guide to GitHub Pages** вручную;
-2. адрес сайта появится в логе джобы `deploy` и в **Settings → Pages**.
+3. адрес сайта появится в логе джобы `deploy` и в **Settings → Pages**. После переключения
+   на «GitHub Actions» инструкция открывается по корневому адресу сайта (`…/`),
+   а не по `…/USER_GUIDE.html` (как было в legacy-режиме из `/docs`).
 
 > Репозиторий публичный, поэтому GitHub Pages доступен на бесплатном плане.
 
