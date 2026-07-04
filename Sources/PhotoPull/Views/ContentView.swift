@@ -45,7 +45,10 @@ struct ContentView: View {
         .padding(24)
         .onAppear { browser.start() }
         .onDisappear { browser.stop() }
-        .onChange(of: browser.devices.map(\.id)) { ids in
+        // onReceive вместо onChange(of:perform:) — последняя депрекейтнута в новых SDK,
+        // а onReceive поддерживается на macOS 13+ без предупреждений.
+        .onReceive(browser.$devices) { devices in
+            let ids = devices.map(\.id)
             // Автовыбор единственного устройства и сброс исчезнувшего выбора.
             if selectedDeviceID == nil, ids.count == 1 {
                 selectedDeviceID = ids.first
