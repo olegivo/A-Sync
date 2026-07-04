@@ -41,6 +41,13 @@ final class Importer: NSObject, ObservableObject {
     private var failed = 0
     private var usedFilenames: Set<String> = []
     private var hasStartedDownloads = false
+    /// Флаг отмены: гасит асинхронные колбэки, которые могут прийти после `cancel()`.
+    private var isCancelled = false
+    /// Watchdog: срабатывает, если после открытия сессии каталог так и не стал готов.
+    private var readinessTimeout: DispatchWorkItem?
+
+    /// Максимум ожидания готовности каталога контента после открытия сессии.
+    private let readinessTimeoutSeconds: TimeInterval = 120
 
     var isRunning: Bool {
         switch state {
@@ -70,6 +77,7 @@ final class Importer: NSObject, ObservableObject {
         self.usedFilenames = []
         self.queue = []
         self.hasStartedDownloads = false
+        self.isCancelled = false
         self.currentFileProgress = 0
         self.currentFileName = ""
 
@@ -79,9 +87,12 @@ final class Importer: NSObject, ObservableObject {
         device.delegate = self
         state = .openingSession
         device.requestOpenSession()
+        scheduleReadinessTimeout()
     }
 
     func cancel() {
+        guard isRunning else { return }
+        isCancelled = true
         device?.cancelDownload()
         finish(closingSession: true)
         state = .failed("Импорт отменён")
@@ -89,14 +100,28 @@ final class Importer: NSObject, ObservableObject {
 
     // MARK: - Private helpers
 
+    private func scheduleReadinessTimeout() {
+        readinessTimeout?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.isRunning, !self.hasStartedDownloads else { return }
+            self.finish(closingSession: true)
+            self.state = .failed("Устройство не ответило за отведённое время. Переподключите iPhone и повторите.")
+        }
+        readinessTimeout = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + readinessTimeoutSeconds, execute: work)
+    }
+
     private func existingFilenames(in directory: URL) -> Set<String> {
         let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
         return Set(names)
     }
 
     private func beginDownloadsIfNeeded() {
+        guard !isCancelled else { return }
         guard !hasStartedDownloads, let device else { return }
         hasStartedDownloads = true
+        readinessTimeout?.cancel()
+        readinessTimeout = nil
 
         let now = Date()
         let media = (device.mediaFiles ?? [])
@@ -124,6 +149,7 @@ final class Importer: NSObject, ObservableObject {
     }
 
     private func downloadNext() {
+        guard !isCancelled else { return }
         guard let device, let destinationURL else { return }
 
         guard !queue.isEmpty else {
@@ -159,6 +185,8 @@ final class Importer: NSObject, ObservableObject {
     }
 
     private func finish(closingSession: Bool) {
+        readinessTimeout?.cancel()
+        readinessTimeout = nil
         if closingSession {
             device?.requestCloseSession()
         }
@@ -167,6 +195,10 @@ final class Importer: NSObject, ObservableObject {
             isAccessingResource = false
         }
         device?.delegate = nil
+        // Обнуляем состояние, чтобы запоздалые колбэки не смогли перезапустить импорт.
+        device = nil
+        destinationURL = nil
+        queue = []
     }
 }
 
@@ -221,9 +253,9 @@ extension Importer: ICCameraDeviceDelegate {
 
 extension Importer: ICCameraDeviceDownloadDelegate {
 
-    @objc func didDownloadFile(_ file: ICCameraFile, error: Error?, options: [String: Any], contextInfo: UnsafeMutableRawPointer?) {
+    @objc nonisolated func didDownloadFile(_ file: ICCameraFile, error: Error?, options: [String: Any], contextInfo: UnsafeMutableRawPointer?) {
         DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
+            guard let self, !self.isCancelled else { return }
             if error == nil {
                 self.succeeded += 1
             } else {
@@ -239,7 +271,8 @@ extension Importer: ICCameraDeviceDownloadDelegate {
         guard maxBytes > 0 else { return }
         let fraction = Double(downloadedBytes) / Double(maxBytes)
         DispatchQueue.main.async { [weak self] in
-            self?.currentFileProgress = min(max(fraction, 0), 1)
+            guard let self, !self.isCancelled else { return }
+            self.currentFileProgress = min(max(fraction, 0), 1)
         }
     }
 }
