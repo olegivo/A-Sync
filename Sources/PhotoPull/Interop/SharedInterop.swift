@@ -46,8 +46,11 @@ enum SharedLogic {
     }
 
     /// Уникальное имя файла для папки назначения (обёртка над Kotlin `FilenameResolver`).
+    ///
+    /// `caseInsensitive: true` — тома macOS по умолчанию регистронезависимы (APFS/HFS+),
+    /// поэтому коллизии считаем без учёта регистра.
     static func uniqueFilename(_ proposed: String, existing: Set<String>) -> String {
-        resolver.uniqueFilename(proposed: proposed, existing: existing)
+        resolver.uniqueFilename(proposed: proposed, existing: existing, caseInsensitive: true)
     }
 
     /// Человекочитаемая сводка импорта (обёртка над Kotlin `ImportResult`).

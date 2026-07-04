@@ -13,14 +13,31 @@ class FilenameResolver {
      *
      * Если [proposed] свободно — возвращается как есть. Иначе к базовой части имени
      * добавляется суффикс `-1`, `-2`, ... до первого свободного варианта, а расширение
-     * сохраняется. Регистр учитывается так же, как в [existing].
+     * сохраняется.
      *
      * @param proposed Желаемое имя файла (например, `IMG_0001.HEIC`).
      * @param existing Уже занятые имена в целевой папке.
+     * @param caseInsensitive Если `true`, коллизии определяются без учёта регистра —
+     *   это соответствует поведению регистронезависимых томов (APFS/HFS+ по умолчанию),
+     *   где `img.jpg` и `IMG.JPG` — один и тот же файл. По умолчанию `false`.
      * @return Уникальное имя файла.
      */
-    fun uniqueFilename(proposed: String, existing: Set<String>): String {
-        if (proposed !in existing) return proposed
+    fun uniqueFilename(
+        proposed: String,
+        existing: Set<String>,
+        caseInsensitive: Boolean = false
+    ): String {
+        // Для регистронезависимого режима сравниваем по нормализованному (нижнему) регистру.
+        val taken: Set<String> = if (caseInsensitive) {
+            existing.mapTo(HashSet(existing.size)) { it.lowercase() }
+        } else {
+            existing
+        }
+
+        fun isTaken(name: String): Boolean =
+            if (caseInsensitive) name.lowercase() in taken else name in taken
+
+        if (!isTaken(proposed)) return proposed
 
         val dotIndex = proposed.lastIndexOf('.')
         val hasExtension = dotIndex > 0
@@ -30,7 +47,7 @@ class FilenameResolver {
         var index = 1
         while (true) {
             val candidate = if (ext.isEmpty()) "$base-$index" else "$base-$index.$ext"
-            if (candidate !in existing) return candidate
+            if (!isTaken(candidate)) return candidate
             index++
         }
     }

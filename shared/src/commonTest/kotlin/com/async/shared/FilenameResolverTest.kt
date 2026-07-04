@@ -37,9 +37,35 @@ class FilenameResolverTest {
     }
 
     @Test
-    fun caseSensitivity() {
-        // Занятое имя в другом регистре не считается конфликтом.
+    fun caseSensitiveModeTreatsDifferentCaseAsFree() {
+        // По умолчанию (регистрозависимо) имя в другом регистре не считается конфликтом.
         assertEquals("IMG.JPG", resolver.uniqueFilename("IMG.JPG", setOf("img.jpg")))
+    }
+
+    @Test
+    fun caseInsensitiveModeDetectsCollisionAcrossCase() {
+        // На регистронезависимом томе img.jpg и IMG.JPG — один файл → нужен суффикс.
+        assertEquals(
+            "IMG-1.JPG",
+            resolver.uniqueFilename("IMG.JPG", setOf("img.jpg"), caseInsensitive = true)
+        )
+    }
+
+    @Test
+    fun caseInsensitiveModeSkipsTakenSuffixAcrossCase() {
+        val existing = setOf("img.jpg", "img-1.jpg")
+        assertEquals(
+            "IMG-2.JPG",
+            resolver.uniqueFilename("IMG.JPG", existing, caseInsensitive = true)
+        )
+    }
+
+    @Test
+    fun caseInsensitiveModeReturnsProposedWhenTrulyFree() {
+        assertEquals(
+            "IMG.JPG",
+            resolver.uniqueFilename("IMG.JPG", setOf("other.png"), caseInsensitive = true)
+        )
     }
 
     @Test
