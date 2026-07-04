@@ -14,8 +14,9 @@ struct ContentView: View {
     }
 
     private var canStartImport: Bool {
-        guard settings.isReadyToImport, let device = selectedDevice else { return false }
-        return !device.isRestricted && !importer.isRunning
+        _ = browser.deviceAccessVersion
+        guard settings.isReadyToImport, selectedDevice != nil else { return false }
+        return !importer.isRunning
     }
 
     var body: some View {
@@ -31,6 +32,7 @@ struct ContentView: View {
                 isBrowsing: browser.isBrowsing,
                 selectedDeviceID: $selectedDeviceID
             )
+            .id(browser.deviceAccessVersion)
 
             Divider()
 
@@ -54,6 +56,14 @@ struct ContentView: View {
                 selectedDeviceID = ids.first
             } else if let selectedDeviceID, !ids.contains(selectedDeviceID) {
                 self.selectedDeviceID = ids.first
+            }
+        }
+        .onReceive(importer.$state) { state in
+            switch state {
+            case .idle, .finished, .failed:
+                browser.reattachDelegates()
+            case .openingSession, .downloading:
+                break
             }
         }
     }
