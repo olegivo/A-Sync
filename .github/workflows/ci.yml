@@ -10,6 +10,11 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# paths-filter читает список файлов PR через GitHub API — нужен pull-requests: read.
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   # Определяем, менялись ли файлы, влияющие на дорогую (×10) сборку macOS/DMG,
   # чтобы не запускать её на doc-only и прочих несвязанных изменениях.
