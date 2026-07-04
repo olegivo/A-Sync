@@ -1,0 +1,22 @@
+.DS_Store
+
+# Swift / Xcode
+.build/
+.swiftpm/
+DerivedData/
+xcuserdata/
+# Xcode-проект генерируется из project.yml (XcodeGen), не коммитим.
+*.xcodeproj/
+
+# Gradle / Kotlin
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+local.properties
+.kotlin/
+
+# Артефакты сборки DMG
+dist/
+
+# Сгенерированный сайт GitHub Pages
+_site/

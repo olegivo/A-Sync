@@ -1,0 +1,57 @@
+name: Release DMG
+
+# Сборка устанавливаемого DMG. Запускается вручную или по тегу vX.Y.Z, чтобы не
+# расходовать дорогие (×10) macOS-минуты на каждый push.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-dmg:
+    name: Build installable DMG (macOS)
+    # macos-15 несёт Xcode 16+, совместимый с форматом проекта, который генерирует XcodeGen.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Cache Gradle & Konan
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.konan
+          key: gradle-macos-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-macos-
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Build DMG
+        run: ./scripts/build-dmg.sh
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhotoPull-dmg
+          path: dist/*.dmg
+          if-no-files-found: error
+          retention-days: 90
+
+      # По тегу vX.Y.Z дополнительно публикуем DMG как asset в GitHub Release —
+      # это даёт постоянную ссылку для скачивания (в отличие от временного artifact).
+      - name: Attach DMG to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.dmg

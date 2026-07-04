@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Отменяем предыдущие незавершённые прогоны на той же ветке/PR (экономия раннеров).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# paths-filter читает список файлов PR через GitHub API — нужен pull-requests: read.
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  # Определяем, менялись ли файлы, влияющие на дорогую (×10) сборку macOS/DMG,
+  # чтобы не запускать её на doc-only и прочих несвязанных изменениях.
+  changes:
+    name: Detect relevant changes
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            app:
+              - 'Sources/**'
+              - 'shared/**'
+              - 'AppSupport/**'
+              - 'project.yml'
+              - 'Package.swift'
+              - 'scripts/**'
+              - '*.gradle.kts'
+              - 'gradle/**'
+              - 'gradlew'
+              - '.github/workflows/ci.yml'
+
+  # Тесты общей логики (KMP commonMain/commonTest) на JVM.
+  # Linux-раннер тарифицируется ×1 — здесь покрывается основная масса кода.
+  logic-tests:
+    name: Shared logic tests (JVM, Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Cache Gradle & Konan
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.konan
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Run shared JVM tests
+        run: ./gradlew :shared:jvmTest --console=plain
+
+  # Сборка macOS-приложения и упаковка в DMG. Собирает XCFramework из KMP, генерирует
+  # Xcode App-таргет (XcodeGen) и упаковывает .app в DMG. Артефакт DMG доступен для
+  # скачивания на странице каждого прогона (вкладка Artifacts).
+  # macos-15 несёт Xcode 16+ (совместим с форматом проекта XcodeGen). Раннер ×10.
+  macos-build:
+    name: Build macOS app & DMG
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Cache Gradle & Konan
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.konan
+          key: gradle-macos-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-macos-
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Build DMG
+        run: ./scripts/build-dmg.sh
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhotoPull-dmg
+          path: dist/*.dmg
+          if-no-files-found: error
+          retention-days: 30
