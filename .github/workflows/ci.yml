@@ -5,7 +5,37 @@ on:
     branches: [main]
   pull_request:
 
+# Отменяем предыдущие незавершённые прогоны на той же ветке/PR (экономия раннеров).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # Определяем, менялись ли файлы, влияющие на дорогую (×10) сборку macOS/DMG,
+  # чтобы не запускать её на doc-only и прочих несвязанных изменениях.
+  changes:
+    name: Detect relevant changes
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            app:
+              - 'Sources/**'
+              - 'shared/**'
+              - 'AppSupport/**'
+              - 'project.yml'
+              - 'Package.swift'
+              - 'scripts/**'
+              - '*.gradle.kts'
+              - 'gradle/**'
+              - 'gradlew'
+              - '.github/workflows/ci.yml'
+
   # Тесты общей логики (KMP commonMain/commonTest) на JVM.
   # Linux-раннер тарифицируется ×1 — здесь покрывается основная масса кода.
   logic-tests:
@@ -38,6 +68,8 @@ jobs:
   # macos-15 несёт Xcode 16+ (совместим с форматом проекта XcodeGen). Раннер ×10.
   macos-build:
     name: Build macOS app & DMG
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
