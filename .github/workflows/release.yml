@@ -17,15 +17,15 @@ jobs:
     # macos-15 несёт Xcode 16+, совместимый с форматом проекта, который генерирует XcodeGen.
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
 
       - name: Cache Gradle & Konan
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.gradle/caches

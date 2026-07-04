@@ -30,7 +30,7 @@ jobs:
     name: Build site
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # enablement: true автоматически включает Pages (Source = GitHub Actions),
       # чтобы не выбирать источник вручную в Settings → Pages.
