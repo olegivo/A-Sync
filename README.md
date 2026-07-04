@@ -184,15 +184,16 @@ xattr -dr com.apple.quarantine /Applications/PhotoPull.app
 - Деплой: workflow `.github/workflows/pages.yml` собирает сайт и публикует через
   `actions/deploy-pages` при push в `main` (или вручную через **Run workflow**).
 
-**Как включить (однократно):**
+**Как включить:**
 
-1. **Settings → Pages → Source = «GitHub Actions»**.
-2. Запустить workflow **Deploy user guide to GitHub Pages** (или сделать push в `main`).
-3. Адрес сайта появится в логе джобы `deploy` и в **Settings → Pages**.
+Workflow сам включает Pages (`actions/configure-pages` с `enablement: true`) при первом
+запуске на ветке `main`, поэтому достаточно:
 
-> ⚠️ Для **приватного** репозитория GitHub Pages доступен только на платных планах
-> (GitHub Pro/Team/Enterprise). На бесплатном плане опубликовать Pages можно, только сделав
-> репозиторий публичным.
+1. смёрджить изменения в `main` (workflow запустится автоматически), либо запустить
+   **Deploy user guide to GitHub Pages** вручную;
+2. адрес сайта появится в логе джобы `deploy` и в **Settings → Pages**.
+
+> Репозиторий публичный, поэтому GitHub Pages доступен на бесплатном плане.
 
 ## Статус проверки
 
