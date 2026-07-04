@@ -63,11 +63,6 @@ final class Importer: NSObject, ObservableObject {
     func startImport(device: ICCameraDevice, destination: URL, mode: TransferMode, filterDaysBack: Int) {
         guard !isRunning else { return }
 
-        if device.isAccessRestrictedAppleDevice {
-            state = .failed("iPhone заблокирован или не доверяет этому Mac. Разблокируйте телефон и нажмите «Доверять».")
-            return
-        }
-
         self.device = device
         self.destinationURL = destination
         self.transferMode = mode
@@ -86,8 +81,14 @@ final class Importer: NSObject, ObservableObject {
 
         device.delegate = self
         state = .openingSession
-        device.requestOpenSession()
         scheduleReadinessTimeout()
+
+        // Сессия могла быть уже открыта CameraBrowser при обнаружении устройства.
+        if let files = device.mediaFiles, !files.isEmpty {
+            beginDownloadsIfNeeded()
+        } else {
+            device.requestOpenSession()
+        }
     }
 
     func cancel() {
