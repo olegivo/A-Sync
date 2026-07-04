@@ -7,6 +7,8 @@ on:
   push:
     tags:
       - "v*"
+  # ВРЕМЕННО: одноразовая проверка сборки App-таргета и DMG на PR. Будет удалено.
+  pull_request:
 
 jobs:
   build-dmg:
@@ -29,6 +31,9 @@ jobs:
             ~/.konan
           key: gradle-macos-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-macos-
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
 
       - name: Build DMG
         run: ./scripts/build-dmg.sh
