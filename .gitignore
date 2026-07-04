@@ -4,8 +4,9 @@
 .build/
 .swiftpm/
 DerivedData/
-*.xcodeproj/xcuserdata/
 xcuserdata/
+# Xcode-проект генерируется из project.yml (XcodeGen), не коммитим.
+*.xcodeproj/
 
 # Gradle / Kotlin
 .gradle/

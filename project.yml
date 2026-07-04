@@ -1,0 +1,40 @@
+# Спецификация Xcode-проекта для XcodeGen.
+#
+# Генерация проекта:
+#     xcodegen generate            # создаст PhotoPull.xcodeproj
+#
+# Проект НЕ коммитится (см. .gitignore) — он детерминированно генерируется из этого файла.
+# Предварительно должен быть собран Kotlin XCFramework:
+#     ./gradlew :shared:assembleSharedReleaseXCFramework
+name: PhotoPull
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+
+targets:
+  PhotoPull:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/PhotoPull
+    dependencies:
+      # Статический XCFramework из KMP-модуля shared (isStatic = true → без embed).
+      - framework: shared/build/XCFrameworks/release/Shared.xcframework
+        embed: false
+    settings:
+      base:
+        PRODUCT_NAME: PhotoPull
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.PhotoPull
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: AppSupport/Info.plist
+        CODE_SIGN_ENTITLEMENTS: AppSupport/PhotoPull.entitlements
+        SWIFT_VERSION: "5.9"
+        ENABLE_HARDENED_RUNTIME: NO
+        # Подпись: ad-hoc/локальная. Полноценный Developer ID не используется
+        # (нет аккаунта, публикация не планируется).
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
