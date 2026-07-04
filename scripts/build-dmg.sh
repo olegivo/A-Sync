@@ -14,7 +14,7 @@
 set -euo pipefail
 
 APP_NAME="PhotoPull"
-BUNDLE_ID="com.example.PhotoPull"
+BUNDLE_ID="io.github.olegivo.PhotoPull"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INFO_PLIST="${ROOT_DIR}/AppSupport/Info.plist"
 ENTITLEMENTS="${ROOT_DIR}/AppSupport/PhotoPull.entitlements"
@@ -50,7 +50,9 @@ if [[ ! -d "${APP_SRC}" ]]; then
 fi
 
 echo "==> 4/5 Ad-hoc codesign (с entitlements)"
-codesign --force --deep --sign - \
+# Без --deep (помечен Apple как deprecated). Бандл не содержит вложенных фреймворков/дилибов
+# (Shared.xcframework статический), поэтому достаточно подписать сам бандл.
+codesign --force --sign - \
     --entitlements "${ENTITLEMENTS}" \
     --identifier "${BUNDLE_ID}" \
     "${APP_SRC}" || echo "ПРЕДУПРЕЖДЕНИЕ: codesign не выполнен" >&2

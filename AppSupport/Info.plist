@@ -12,7 +12,7 @@
     <key>CFBundleDisplayName</key>
     <string>PhotoPull</string>
     <key>CFBundleIdentifier</key>
-    <string>com.example.PhotoPull</string>
+    <string>io.github.olegivo.PhotoPull</string>
     <key>CFBundleExecutable</key>
     <string>PhotoPull</string>
     <key>CFBundleInfoDictionaryVersion</key>
