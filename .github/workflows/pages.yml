@@ -1,0 +1,60 @@
+name: Deploy user guide to GitHub Pages
+
+# Публикует инструкцию пользователя (docs/USER_GUIDE.md + скриншоты) как сайт GitHub Pages.
+#
+# Требования:
+#   * В Settings → Pages выбрать Source = "GitHub Actions".
+#   * Для приватного репозитория Pages доступен только на платных планах
+#     (GitHub Pro/Team/Enterprise). На бесплатном плане репозиторий должен быть публичным.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "scripts/build_site.py"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Одновременно — только один деплой Pages.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install markdown
+
+      - name: Build static site
+        run: python3 scripts/build_site.py
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy to Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

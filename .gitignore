@@ -17,3 +17,6 @@ local.properties
 
 # Артефакты сборки DMG
 dist/
+
+# Сгенерированный сайт GitHub Pages
+_site/

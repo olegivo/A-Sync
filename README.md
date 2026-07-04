@@ -9,6 +9,7 @@
 позволяет тестировать логику на дешёвом Linux-CI.
 
 📖 **Инструкция пользователя со скриншотами состояний:** [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)
+(также публикуется как сайт **GitHub Pages** — см. раздел «Инструкция онлайн (GitHub Pages)»).
 
 ## Что делает MVP
 
@@ -174,6 +175,24 @@ xattr -dr com.apple.quarantine /Applications/PhotoPull.app
 
 - **`logic-tests`** — `./gradlew :shared:jvmTest` на `ubuntu-latest` (×1, дёшево);
 - **`macos-build`** — сборка XCFramework и `swift build` на `macos-14` (×10, только сборка).
+
+## Инструкция онлайн (GitHub Pages)
+
+Инструкция пользователя публикуется как статический сайт из `docs/USER_GUIDE.md`.
+
+- Сборка сайта: `python3 scripts/build_site.py` (нужен `pip install markdown`) → каталог `_site/`.
+- Деплой: workflow `.github/workflows/pages.yml` собирает сайт и публикует через
+  `actions/deploy-pages` при push в `main` (или вручную через **Run workflow**).
+
+**Как включить (однократно):**
+
+1. **Settings → Pages → Source = «GitHub Actions»**.
+2. Запустить workflow **Deploy user guide to GitHub Pages** (или сделать push в `main`).
+3. Адрес сайта появится в логе джобы `deploy` и в **Settings → Pages**.
+
+> ⚠️ Для **приватного** репозитория GitHub Pages доступен только на платных планах
+> (GitHub Pro/Team/Enterprise). На бесплатном плане опубликовать Pages можно, только сделав
+> репозиторий публичным.
 
 ## Статус проверки
 
