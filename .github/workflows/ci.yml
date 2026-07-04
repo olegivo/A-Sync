@@ -32,11 +32,13 @@ jobs:
       - name: Run shared JVM tests
         run: ./gradlew :shared:jvmTest --console=plain
 
-  # Сборка Apple-артефактов: XCFramework из KMP + компиляция macOS-приложения.
-  # macOS-раннер тарифицируется ×10 — используется только для сборки, не для логики.
+  # Сборка macOS-приложения и упаковка в DMG. Собирает XCFramework из KMP, генерирует
+  # Xcode App-таргет (XcodeGen) и упаковывает .app в DMG. Артефакт DMG доступен для
+  # скачивания на странице каждого прогона (вкладка Artifacts).
+  # macos-15 несёт Xcode 16+ (совместим с форматом проекта XcodeGen). Раннер ×10.
   macos-build:
-    name: Build XCFramework & macOS app
-    runs-on: macos-14
+    name: Build macOS app & DMG
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
@@ -55,8 +57,16 @@ jobs:
           key: gradle-macos-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-macos-
 
-      - name: Assemble Shared XCFramework
-        run: ./gradlew :shared:assembleSharedReleaseXCFramework --console=plain
+      - name: Install XcodeGen
+        run: brew install xcodegen
 
-      - name: Build macOS app
-        run: swift build
+      - name: Build DMG
+        run: ./scripts/build-dmg.sh
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhotoPull-dmg
+          path: dist/*.dmg
+          if-no-files-found: error
+          retention-days: 30

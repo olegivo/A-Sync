@@ -122,8 +122,17 @@ App-таргет через `xcodebuild` (Release), подписывает ad-ho
 `dist/PhotoPull-<version>.dmg` со ссылкой на `/Applications` для drag-and-drop установки.
 Требуется `brew install xcodegen`.
 
-DMG также собирается в CI: workflow **Release DMG** (`.github/workflows/release.yml`)
-запускается вручную (`workflow_dispatch`) или по тегу `vX.Y.Z` и публикует DMG как artifact.
+#### Скачивание DMG из CI
+
+- **С каждого прогона CI** (PR/push в `main`): job **Build macOS app & DMG** в workflow
+  `CI` собирает DMG и выкладывает его как artifact **PhotoPull-dmg**. Скачать:
+  GitHub → **Actions** → нужный прогон → раздел **Artifacts**.
+- **По тегу `vX.Y.Z`**: workflow **Release DMG** дополнительно прикрепляет DMG к
+  **GitHub Release** — это постоянная ссылка для скачивания (раздел Releases).
+- **Вручную**: workflow **Release DMG** → **Run workflow** (`workflow_dispatch`) → artifact.
+
+> Artifact — это zip с `.dmg` внутри (GitHub всегда упаковывает artifacts в zip);
+> распакуйте, чтобы получить сам `PhotoPull-<version>.dmg`.
 
 #### Установка из DMG (обход Gatekeeper)
 
